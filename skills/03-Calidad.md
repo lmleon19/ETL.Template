@@ -22,6 +22,12 @@ Antes de finalizar el desarrollo verificar el siguiente checklist.
 
 □ Puede leerse de arriba hacia abajo.
 
+□ Cada paso valida si puede continuar.
+
+□ El proceso retorna 0 cuando termina correctamente.
+
+□ El proceso retorna distinto de 0 cuando falla.
+
 ---
 
 ## Métodos
@@ -76,6 +82,8 @@ Antes de finalizar el desarrollo verificar el siguiente checklist.
 
 □ No se pierde información del error.
 
+□ Un error en un paso impide ejecutar los pasos posteriores.
+
 ---
 
 ## Legibilidad
@@ -85,5 +93,15 @@ Antes de finalizar el desarrollo verificar el siguiente checklist.
 □ Los nombres son claros.
 
 □ El flujo del proceso es evidente.
+
+---
+
+## Documentación
+
+□ README.md está actualizado.
+
+□ docs contiene la documentación institucional vigente.
+
+□ examples contiene solo ejemplos pequeños, no ETL completos.
 
 Si algún punto no se cumple, debe corregirse antes de finalizar el desarrollo.

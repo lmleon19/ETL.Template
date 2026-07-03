@@ -40,40 +40,73 @@ string rutaZip = Path.Combine(opciones.CarpetaTrabajo, opciones.NombreArchivoZip
 string carpetaExtraccion = Path.Combine(opciones.CarpetaTrabajo, "extraido");
 string cadenaConexion = configuration.GetConnectionString("Principal") ?? string.Empty;
 
-logger.LogInformation("Inicio ETL NombreProceso.");
+try
+{
+    logger.LogInformation("Inicio ETL NombreProceso.");
 
-// 1. Preparar carpetas de trabajo.
-sistemaArchivos.CrearCarpetaSiNoExiste(opciones.CarpetaTrabajo);
-sistemaArchivos.EliminarCarpetaSiExiste(carpetaExtraccion);
+    // 1. Preparar carpetas de trabajo.
+    sistemaArchivos.CrearCarpetaSiNoExiste(opciones.CarpetaTrabajo);
+    sistemaArchivos.EliminarCarpetaSiExiste(carpetaExtraccion);
 
-// 2. Descargar archivo.
-ResultadoOperacion<string> descarga = await descargaHttp.DescargarArchivoAsync(opciones.UrlDescarga, rutaZip);
+    // 2. Descargar archivo.
+    ResultadoOperacion<string> descarga = await descargaHttp.DescargarArchivoAsync(opciones.UrlDescarga, rutaZip);
+    if (!descarga.Exitoso)
+    {
+        logger.LogError("Error en descarga: {Mensaje}", descarga.Mensaje);
+        return 1;
+    }
 
-// 3. Descomprimir archivo.
-ResultadoOperacion<IReadOnlyList<string>> descompresion = zip.DescomprimirArchivo(rutaZip, carpetaExtraccion);
+    // 3. Descomprimir archivo.
+    ResultadoOperacion<IReadOnlyList<string>> descompresion = zip.DescomprimirArchivo(rutaZip, carpetaExtraccion);
+    if (!descompresion.Exitoso)
+    {
+        logger.LogError("Error en descompresión: {Mensaje}", descompresion.Mensaje);
+        return 1;
+    }
 
-// 4. Detectar encoding.
-string rutaCsv = sistemaArchivos.BuscarPrimerArchivo(carpetaExtraccion, opciones.PatronCsv);
-var encoding = detectorEncoding.DetectarEncoding(rutaCsv);
+    // 4. Detectar encoding.
+    string rutaCsv = sistemaArchivos.BuscarPrimerArchivo(carpetaExtraccion, opciones.PatronCsv);
+    var encoding = detectorEncoding.DetectarEncoding(rutaCsv);
 
-// 5. Validar CSV.
-ResultadoOperacion validacion = await validadorCsv.ValidarColumnasObligatoriasAsync(rutaCsv, encoding, opciones.Delimitador, opciones.ColumnasObligatorias);
+    // 5. Validar CSV.
+    ResultadoOperacion validacion = await validadorCsv.ValidarColumnasObligatoriasAsync(rutaCsv, encoding, opciones.Delimitador, opciones.ColumnasObligatorias);
+    if (!validacion.Exitoso)
+    {
+        logger.LogError("Error en validación CSV: {Mensaje}", validacion.Mensaje);
+        return 1;
+    }
 
-// 6. Leer CSV.
-IReadOnlyList<Dictionary<string, string>> registros = await csv.LeerCsvAsync(rutaCsv, encoding, opciones.Delimitador);
+    // 6. Leer CSV.
+    IReadOnlyList<Dictionary<string, string>> registros = await csv.LeerCsvAsync(rutaCsv, encoding, opciones.Delimitador);
 
-// 7. Cargar tabla Stage.
-ResultadoOperacion cargaStage = await cargadorSqlBulkCopy.CargarAsync(cadenaConexion, opciones.TablaStage, registros);
+    // 7. Cargar tabla Stage.
+    ResultadoOperacion cargaStage = await cargadorSqlBulkCopy.CargarAsync(cadenaConexion, opciones.TablaStage, registros);
+    if (!cargaStage.Exitoso)
+    {
+        logger.LogError("Error en carga Stage: {Mensaje}", cargaStage.Mensaje);
+        return 1;
+    }
 
-// 8. Ejecutar procedimiento almacenado final.
-ResultadoOperacion procedimientoFinal = await procedimientoAlmacenado.EjecutarAsync(cadenaConexion, opciones.ProcedimientoFinal);
+    // 8. Ejecutar procedimiento almacenado final.
+    ResultadoOperacion procedimientoFinal = await procedimientoAlmacenado.EjecutarAsync(cadenaConexion, opciones.ProcedimientoFinal);
+    if (!procedimientoFinal.Exitoso)
+    {
+        logger.LogError("Error en procedimiento final: {Mensaje}", procedimientoFinal.Mensaje);
+        return 1;
+    }
 
-logger.LogInformation(
-    "Fin estructura base ETL. Descarga={Descarga}, Descompresión={Descompresion}, Validación={Validacion}, Carga={Carga}, Procedimiento={Procedimiento}.",
-    descarga.Mensaje,
-    descompresion.Mensaje,
-    validacion.Mensaje,
-    cargaStage.Mensaje,
-    procedimientoFinal.Mensaje);
+    logger.LogInformation(
+        "Fin ETL NombreProceso. Descarga={Descarga}, Descompresión={Descompresion}, Validación={Validacion}, Carga={Carga}, Procedimiento={Procedimiento}.",
+        descarga.Mensaje,
+        descompresion.Mensaje,
+        validacion.Mensaje,
+        cargaStage.Mensaje,
+        procedimientoFinal.Mensaje);
 
-return 0;
+    return 0;
+}
+catch (Exception ex)
+{
+    logger.LogError(ex, "Error no controlado durante la ejecución del ETL NombreProceso.");
+    return 1;
+}

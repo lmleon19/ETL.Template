@@ -1,14 +1,31 @@
 # Ejecución desde SQL Server Agent
 
-Documento inicial para preparar la futura ejecución de ETL desde SQL Server Agent.
+Este documento resume la ejecución operativa. El estándar completo está en `SQLAgent.md`.
 
-## Enfoque previsto
+## Enfoque
 
-Cada ETL se publicará como aplicación de consola .NET y se ejecutará desde un Job Step de tipo **Operating system (CmdExec)**.
+Cada ETL se publica como una aplicación de consola .NET independiente.
 
-## Pendiente
+La ejecución desde SQL Server Agent debe realizarse con un Job Step de tipo:
 
-- Definir estándar de publicación.
-- Definir cuenta de servicio.
-- Definir ubicación de binarios y logs.
-- Definir manejo de códigos de salida.
+```text
+Operating system (CmdExec)
+```
+
+## Código de salida
+
+- `0`: ejecución correcta.
+- Distinto de `0`: ejecución fallida.
+
+El proceso debe registrar el error antes de finalizar con código distinto de cero.
+
+## Configuración mínima
+
+Cada ETL debe definir:
+
+- Ruta del ejecutable publicado.
+- Carpeta de trabajo.
+- Archivo `appsettings.json` correspondiente al ambiente.
+- Cuenta de ejecución del Job.
+- Permisos sobre carpetas, archivos y base de datos.
+- Política de retención de logs.

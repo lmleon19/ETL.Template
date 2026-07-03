@@ -27,6 +27,14 @@ No debe contener lógica de negocio.
 
 Debe ser posible leer el proceso de arriba hacia abajo.
 
+Cada paso debe validar si puede continuar.
+
+Si un paso falla:
+
+- registrar el error
+- no ejecutar los pasos siguientes
+- retornar un código de salida distinto de cero
+
 Ejemplo:
 
 RegistrarInicioProceso()
@@ -50,6 +58,8 @@ if (...)
     EjecutarProcedimientoFinalAsync()
 
 RegistrarFinProceso()
+
+return 0
 
 ---
 
@@ -169,6 +179,8 @@ Toda excepción debe contener suficiente información para identificar:
 
 Nunca ocultar excepciones.
 
+Las excepciones no controladas del flujo principal deben registrarse antes de finalizar el proceso.
+
 ---
 
 # Arquitectura
@@ -178,3 +190,7 @@ No modificar la estructura del template.
 Toda lógica específica pertenece únicamente al proyecto del ETL.
 
 Toda lógica genérica pertenece a ETL.Common.
+
+La documentación institucional vive en docs.
+
+Los ejemplos pequeños reutilizables viven en examples.
