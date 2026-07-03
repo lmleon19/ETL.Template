@@ -44,8 +44,21 @@ ETL.Template/
 ## Proyectos
 
 - `ETL.Common`: librería de utilidades reutilizables y genéricas.
-- `ETL.NombreProceso`: proyecto ejemplo que muestra la forma esperada de un ETL.
+- `ETL.NombreProceso`: proyecto base casi vacío para crear un ETL específico.
 - `ETL.NombreProceso.Tests`: pruebas unitarias del template y de las utilidades comunes.
+
+## Creación de un ETL específico
+
+Para crear un nuevo ETL desde este template:
+
+1. Copiar el template a un nuevo repositorio.
+2. Renombrar `ETL.NombreProceso` con el nombre real del proceso, por ejemplo `ETL.ChileCompra`.
+3. Leer y aplicar las reglas de `skills/`.
+4. Definir el flujo principal en `Program.cs`.
+5. Implementar la lógica específica solo dentro del proyecto del ETL.
+6. Reutilizar `ETL.Common` sin modificarlo.
+7. Actualizar la documentación del ETL.
+8. Ejecutar las pruebas.
 
 ## Flujo estándar
 

@@ -27,7 +27,48 @@ No debe contener lógica de negocio.
 
 Debe ser posible leer el proceso de arriba hacia abajo.
 
+Program.cs no debe registrar manualmente todos los servicios con múltiples llamadas `AddSingleton`, `AddScoped` o equivalentes.
+
+El registro de dependencias debe vivir en una clase de configuración o extensión del proyecto específico.
+
+Ejemplo:
+
+```csharp
+builder.Services.AddServiciosNombreProceso(builder.Configuration);
+```
+
+La clase de configuración puede contener los registros de `ETL.Common` y de servicios propios del ETL.
+
 Cada paso debe validar si puede continuar.
+
+Durante el desarrollo, los pasos del flujo deben quedar activables o desactivables con `if (true)`.
+Para omitir temporalmente un paso, cambiar solo ese `true` por `false`.
+
+Ejemplo:
+
+```csharp
+if (true)
+{
+    // Calcula los meses cerrados que se deben descargar.
+    CalcularPeriodosProceso();
+}
+
+if (true)
+{
+    // Descarga los archivos ZIP de licitaciones.
+    await DescargarLicitacionesAsync();
+}
+
+if (true)
+{
+    // Descarga los archivos ZIP de ordenes de compra.
+    await DescargarOrdenesCompraAsync();
+}
+```
+
+Estos `if` deben usarse solo para controlar la ejecucion de pasos completos, no para ocultar logica de negocio.
+
+Cada bloque del flujo debe incluir un comentario corto que explique que hace el paso.
 
 Si un paso falla:
 
@@ -72,6 +113,27 @@ No crear clases enormes.
 No crear métodos enormes.
 
 Preferir muchos métodos pequeños.
+
+## Carpeta Model
+
+Todo proyecto ETL específico debe usar una carpeta llamada `Model`.
+
+No usar `Modelos`.
+
+La carpeta `Model` contiene clases que representan estructuras de datos propias del proceso, especialmente:
+
+- registros de tablas Stage
+- estructuras de tablas de base de datos
+- modelos de archivos del proceso
+- atributos o metadatos necesarios para mapear columnas
+
+Cuando una clase represente una tabla Stage o una estructura de base de datos, debe ser la fuente maestra de:
+
+- nombre de columna en base de datos
+- tipo de dato SQL cuando corresponda
+- origen del valor cuando sea necesario distinguir CSV, metadato o cálculo
+
+Estas clases pertenecen al proyecto específico del ETL. No deben agregarse a `ETL.Common`.
 
 ---
 

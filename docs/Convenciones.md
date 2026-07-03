@@ -14,6 +14,16 @@ Todos los nombres de clases, métodos, variables, parámetros, mensajes operativ
 
 Usar nombres autoexplicativos. Evitar nombres como `data`, `tmp`, `obj`, `hacer` o `procesar` cuando no expliquen la intención.
 
+## Carpetas
+
+Los proyectos ETL específicos deben usar una carpeta `Model` para clases que representen estructuras de datos del proceso.
+
+No usar `Modelos`.
+
+`Model` debe contener modelos propios del ETL, por ejemplo registros Stage, estructuras de tablas y metadatos de columnas.
+
+Las clases de `Model` que representen tablas Stage o estructuras de base de datos deben ser la fuente maestra para el nombre real de columna y el tipo SQL cuando corresponda.
+
 ## Program.cs
 
 `Program.cs` representa el flujo principal del ETL.
@@ -21,6 +31,21 @@ Usar nombres autoexplicativos. Evitar nombres como `data`, `tmp`, `obj`, `hacer`
 Debe poder leerse de arriba hacia abajo y permitir comprender el proceso completo sin revisar todas las clases.
 
 No debe contener lógica de negocio extensa.
+
+Durante el desarrollo, cada paso puede controlarse mediante `if (true)`.
+Para omitir temporalmente un paso, cambiar solo ese `true` por `false`.
+
+```csharp
+if (true)
+{
+    // Calcula los meses cerrados que se deben procesar.
+    CalcularPeriodosProceso();
+}
+```
+
+Cada bloque del flujo debe incluir un comentario corto que explique su objetivo.
+
+Estos `if` deben activar o desactivar pasos completos. No deben usarse para esconder lógica de negocio dentro de `Program.cs`.
 
 ## Logging
 

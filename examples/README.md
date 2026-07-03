@@ -13,4 +13,5 @@ Estos archivos no son ETL completos. Solo muestran patrones pequeños y reutiliz
 - `SqlBulkCopy.md`
 - `EjecutarStoredProcedure.md`
 
-Para ver el flujo completo de un ETL, revisar `src/ETL.NombreProceso/Program.cs`.
+El proyecto `src/ETL.NombreProceso` es una base casi vacía para crear un ETL real.
+El flujo completo debe definirse cuando se cree cada proceso específico.

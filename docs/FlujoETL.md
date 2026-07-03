@@ -34,20 +34,32 @@ Si un paso falla:
 ```csharp
 RegistrarInicioProceso();
 
-PrepararCarpetasTrabajo();
-
-ResultadoOperacion descarga = await DescargarArchivoAsync();
-if (!descarga.Exitoso)
+if (true)
 {
-    RegistrarError(descarga);
-    return 1;
+    // Prepara las carpetas necesarias para la ejecucion.
+    PrepararCarpetasTrabajo();
 }
 
-ResultadoOperacion validacion = await ValidarArchivoAsync();
-if (!validacion.Exitoso)
+if (true)
 {
-    RegistrarError(validacion);
-    return 1;
+    // Descarga u obtiene el archivo origen del proceso.
+    ResultadoOperacion descarga = await DescargarArchivoAsync();
+    if (!descarga.Exitoso)
+    {
+        RegistrarError(descarga);
+        return 1;
+    }
+}
+
+if (true)
+{
+    // Valida que el archivo tenga la estructura esperada.
+    ResultadoOperacion validacion = await ValidarArchivoAsync();
+    if (!validacion.Exitoso)
+    {
+        RegistrarError(validacion);
+        return 1;
+    }
 }
 
 await CargarTablaStageAsync();

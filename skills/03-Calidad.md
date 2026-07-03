@@ -22,6 +22,10 @@ Antes de finalizar el desarrollo verificar el siguiente checklist.
 
 □ Puede leerse de arriba hacia abajo.
 
+□ Los pasos pueden activarse o desactivarse durante desarrollo mediante `if (true)` / `if (false)`.
+
+□ Cada paso del flujo tiene un comentario corto que explica su objetivo.
+
 □ Cada paso valida si puede continuar.
 
 □ El proceso retorna 0 cuando termina correctamente.
