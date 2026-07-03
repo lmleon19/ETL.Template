@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/ETL.Common/ETL.Common.csproj" />
+  <Project Path="src/ETL.NombreProceso/ETL.NombreProceso.csproj" />
+  <Project Path="tests/ETL.NombreProceso.Tests/ETL.NombreProceso.Tests.csproj" />
+</Solution>
