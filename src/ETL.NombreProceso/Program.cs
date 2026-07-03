@@ -11,14 +11,14 @@ using Microsoft.Extensions.Options;
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.Configure<OpcionesProceso>(builder.Configuration.GetSection("Proceso"));
-builder.Services.AddSingleton<ServicioDescargaHttp>();
-builder.Services.AddSingleton<ServicioSistemaArchivos>();
-builder.Services.AddSingleton<ServicioZip>();
+builder.Services.AddSingleton<DescargaHttp>();
+builder.Services.AddSingleton<SistemaArchivos>();
+builder.Services.AddSingleton<Zip>();
 builder.Services.AddSingleton<DetectorEncoding>();
 builder.Services.AddSingleton<ValidadorCsv>();
-builder.Services.AddSingleton<ServicioCsv>();
-builder.Services.AddSingleton<ServicioSqlBulkCopy>();
-builder.Services.AddSingleton<ServicioProcedimientoAlmacenado>();
+builder.Services.AddSingleton<Csv>();
+builder.Services.AddSingleton<CargadorSqlBulkCopy>();
+builder.Services.AddSingleton<ProcedimientoAlmacenado>();
 
 using IHost host = builder.Build();
 
@@ -27,14 +27,14 @@ ILogger logger = servicios.GetRequiredService<ILoggerFactory>().CreateLogger("ET
 OpcionesProceso opciones = servicios.GetRequiredService<IOptions<OpcionesProceso>>().Value;
 IConfiguration configuration = servicios.GetRequiredService<IConfiguration>();
 
-ServicioSistemaArchivos servicioSistemaArchivos = servicios.GetRequiredService<ServicioSistemaArchivos>();
-ServicioDescargaHttp servicioDescargaHttp = servicios.GetRequiredService<ServicioDescargaHttp>();
-ServicioZip servicioZip = servicios.GetRequiredService<ServicioZip>();
+SistemaArchivos sistemaArchivos = servicios.GetRequiredService<SistemaArchivos>();
+DescargaHttp descargaHttp = servicios.GetRequiredService<DescargaHttp>();
+Zip zip = servicios.GetRequiredService<Zip>();
 DetectorEncoding detectorEncoding = servicios.GetRequiredService<DetectorEncoding>();
 ValidadorCsv validadorCsv = servicios.GetRequiredService<ValidadorCsv>();
-ServicioCsv servicioCsv = servicios.GetRequiredService<ServicioCsv>();
-ServicioSqlBulkCopy servicioSqlBulkCopy = servicios.GetRequiredService<ServicioSqlBulkCopy>();
-ServicioProcedimientoAlmacenado servicioProcedimientoAlmacenado = servicios.GetRequiredService<ServicioProcedimientoAlmacenado>();
+Csv csv = servicios.GetRequiredService<Csv>();
+CargadorSqlBulkCopy cargadorSqlBulkCopy = servicios.GetRequiredService<CargadorSqlBulkCopy>();
+ProcedimientoAlmacenado procedimientoAlmacenado = servicios.GetRequiredService<ProcedimientoAlmacenado>();
 
 string rutaZip = Path.Combine(opciones.CarpetaTrabajo, opciones.NombreArchivoZip);
 string carpetaExtraccion = Path.Combine(opciones.CarpetaTrabajo, "extraido");
@@ -43,30 +43,30 @@ string cadenaConexion = configuration.GetConnectionString("Principal") ?? string
 logger.LogInformation("Inicio ETL NombreProceso.");
 
 // 1. Preparar carpetas de trabajo.
-servicioSistemaArchivos.CrearCarpetaSiNoExiste(opciones.CarpetaTrabajo);
-servicioSistemaArchivos.EliminarCarpetaSiExiste(carpetaExtraccion);
+sistemaArchivos.CrearCarpetaSiNoExiste(opciones.CarpetaTrabajo);
+sistemaArchivos.EliminarCarpetaSiExiste(carpetaExtraccion);
 
 // 2. Descargar archivo.
-ResultadoOperacion<string> descarga = await servicioDescargaHttp.DescargarArchivoAsync(opciones.UrlDescarga, rutaZip);
+ResultadoOperacion<string> descarga = await descargaHttp.DescargarArchivoAsync(opciones.UrlDescarga, rutaZip);
 
 // 3. Descomprimir archivo.
-ResultadoOperacion<IReadOnlyList<string>> descompresion = servicioZip.DescomprimirArchivo(rutaZip, carpetaExtraccion);
+ResultadoOperacion<IReadOnlyList<string>> descompresion = zip.DescomprimirArchivo(rutaZip, carpetaExtraccion);
 
 // 4. Detectar encoding.
-string rutaCsv = servicioSistemaArchivos.BuscarPrimerArchivo(carpetaExtraccion, opciones.PatronCsv);
+string rutaCsv = sistemaArchivos.BuscarPrimerArchivo(carpetaExtraccion, opciones.PatronCsv);
 var encoding = detectorEncoding.DetectarEncoding(rutaCsv);
 
 // 5. Validar CSV.
 ResultadoOperacion validacion = await validadorCsv.ValidarColumnasObligatoriasAsync(rutaCsv, encoding, opciones.Delimitador, opciones.ColumnasObligatorias);
 
 // 6. Leer CSV.
-IReadOnlyList<Dictionary<string, string>> registros = await servicioCsv.LeerCsvAsync(rutaCsv, encoding, opciones.Delimitador);
+IReadOnlyList<Dictionary<string, string>> registros = await csv.LeerCsvAsync(rutaCsv, encoding, opciones.Delimitador);
 
 // 7. Cargar tabla Stage.
-ResultadoOperacion cargaStage = await servicioSqlBulkCopy.CargarAsync(cadenaConexion, opciones.TablaStage, registros);
+ResultadoOperacion cargaStage = await cargadorSqlBulkCopy.CargarAsync(cadenaConexion, opciones.TablaStage, registros);
 
 // 8. Ejecutar procedimiento almacenado final.
-ResultadoOperacion procedimientoFinal = await servicioProcedimientoAlmacenado.EjecutarAsync(cadenaConexion, opciones.ProcedimientoFinal);
+ResultadoOperacion procedimientoFinal = await procedimientoAlmacenado.EjecutarAsync(cadenaConexion, opciones.ProcedimientoFinal);
 
 logger.LogInformation(
     "Fin estructura base ETL. Descarga={Descarga}, Descompresión={Descompresion}, Validación={Validacion}, Carga={Carga}, Procedimiento={Procedimiento}.",

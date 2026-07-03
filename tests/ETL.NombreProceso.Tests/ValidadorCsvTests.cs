@@ -1,3 +1,5 @@
+using Xunit;
+
 namespace ETL.NombreProceso.Tests;
 
 public sealed class ValidadorCsvTests
