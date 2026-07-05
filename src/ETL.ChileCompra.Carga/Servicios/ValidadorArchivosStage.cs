@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using ETL.ChileCompra.Carga.Model;
 using ETL.Common.Resultados;
 using ETL.Common.Servicios;
@@ -26,24 +26,35 @@ public sealed class ValidadorArchivosStage
         this.validadorCsv = validadorCsv;
     }
 
-    public async Task<ResultadoOperacion> ValidarLicitacionesAsync(string rutaArchivo, CancellationToken cancellationToken = default) =>
-        await ValidarAsync<RegistroLicitacionStage>(rutaArchivo, cancellationToken);
+    public async Task<ResultadoOperacion> ValidarLicitacionesAsync(
+        string rutaArchivo,
+        CancellationToken cancellationToken = default,
+        decimal? porcentajeMaximoFilasInvalidas = null) =>
+        await ValidarAsync<RegistroLicitacionStage>(rutaArchivo, cancellationToken, porcentajeMaximoFilasInvalidas);
 
-    public async Task<ResultadoOperacion> ValidarOrdenesCompraAsync(string rutaArchivo, CancellationToken cancellationToken = default) =>
-        await ValidarAsync<RegistroOrdenCompraStage>(rutaArchivo, cancellationToken);
+    public async Task<ResultadoOperacion> ValidarOCAsync(
+        string rutaArchivo,
+        CancellationToken cancellationToken = default,
+        decimal? porcentajeMaximoFilasInvalidas = null) =>
+        await ValidarAsync<RegistroOrdenCompraStage>(rutaArchivo, cancellationToken, porcentajeMaximoFilasInvalidas);
 
-    private async Task<ResultadoOperacion> ValidarAsync<TRegistroStage>(string rutaArchivo, CancellationToken cancellationToken)
+    private async Task<ResultadoOperacion> ValidarAsync<TRegistroStage>(
+        string rutaArchivo,
+        CancellationToken cancellationToken,
+        decimal? porcentajeMaximoFilasInvalidas)
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         Encoding encodingFallback = Encoding.GetEncoding(opciones.EncodingFallback);
         Encoding encoding = detectorEncoding.DetectarEncoding(rutaArchivo, encodingFallback);
         char delimitador = string.IsNullOrEmpty(opciones.DelimitadorCsv) ? ';' : opciones.DelimitadorCsv[0];
+        decimal porcentajeMaximoPermitido = porcentajeMaximoFilasInvalidas ?? opciones.PorcentajeMaximoFilasInvalidas;
 
         ResultadoOperacion estructura = await validadorCsv.ValidarEstructuraBasicaAsync(
             rutaArchivo,
             encoding,
             delimitador,
             cantidadMinimaFilas: 1,
+            porcentajeMaximoRegistrosInvalidos: porcentajeMaximoPermitido,
             cancellationToken: cancellationToken);
 
         if (!estructura.Exitoso)
@@ -59,4 +70,5 @@ public sealed class ValidadorArchivosStage
             cancellationToken: cancellationToken);
     }
 }
+
 

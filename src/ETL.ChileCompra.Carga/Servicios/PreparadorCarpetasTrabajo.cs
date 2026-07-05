@@ -1,4 +1,4 @@
-using ETL.ChileCompra.Carga.Model;
+﻿using ETL.ChileCompra.Carga.Model;
 using ETL.Common.Servicios;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -27,18 +27,18 @@ public sealed class PreparadorCarpetasTrabajo
 
         sistemaArchivos.LimpiarCarpeta(ObtenerCarpetaZipLicitaciones());
         sistemaArchivos.LimpiarCarpeta(ObtenerCarpetaExtraidosLicitaciones());
-        sistemaArchivos.LimpiarCarpeta(ObtenerCarpetaZipOrdenesCompra());
-        sistemaArchivos.LimpiarCarpeta(ObtenerCarpetaExtraidosOrdenesCompra());
+        sistemaArchivos.LimpiarCarpeta(ObtenerCarpetaZipOC());
+        sistemaArchivos.LimpiarCarpeta(ObtenerCarpetaExtraidosOC());
 
         sistemaArchivos.CrearCarpetaSiNoExiste(ObtenerCarpetaFinalLicitaciones());
-        sistemaArchivos.CrearCarpetaSiNoExiste(ObtenerCarpetaFinalOrdenesCompra());
+        sistemaArchivos.CrearCarpetaSiNoExiste(ObtenerCarpetaFinalOC());
     }
 
     public string ObtenerRutaZipLicitaciones(PeriodoProceso periodo) =>
         Path.Combine(ObtenerCarpetaZipLicitaciones(), periodo.NombreArchivoZip);
 
-    public string ObtenerRutaZipOrdenesCompra(PeriodoProceso periodo) =>
-        Path.Combine(ObtenerCarpetaZipOrdenesCompra(), periodo.NombreArchivoZip);
+    public string ObtenerRutaZipOC(PeriodoProceso periodo) =>
+        Path.Combine(ObtenerCarpetaZipOC(), periodo.NombreArchivoZip);
 
     public string ObtenerCarpetaZipLicitaciones() =>
         Path.Combine(opciones.Carpetas.BaseTrabajo, opciones.Carpetas.Licitaciones, opciones.Carpetas.Zip);
@@ -46,15 +46,16 @@ public sealed class PreparadorCarpetasTrabajo
     public string ObtenerCarpetaExtraidosLicitaciones() =>
         Path.Combine(opciones.Carpetas.BaseTrabajo, opciones.Carpetas.Licitaciones, opciones.Carpetas.Extraidos);
 
-    public string ObtenerCarpetaZipOrdenesCompra() =>
-        Path.Combine(opciones.Carpetas.BaseTrabajo, opciones.Carpetas.OrdenesCompra, opciones.Carpetas.Zip);
+    public string ObtenerCarpetaZipOC() =>
+        Path.Combine(opciones.Carpetas.BaseTrabajo, opciones.Carpetas.OC, opciones.Carpetas.Zip);
 
-    public string ObtenerCarpetaExtraidosOrdenesCompra() =>
-        Path.Combine(opciones.Carpetas.BaseTrabajo, opciones.Carpetas.OrdenesCompra, opciones.Carpetas.Extraidos);
+    public string ObtenerCarpetaExtraidosOC() =>
+        Path.Combine(opciones.Carpetas.BaseTrabajo, opciones.Carpetas.OC, opciones.Carpetas.Extraidos);
 
     public string ObtenerCarpetaFinalLicitaciones() =>
         Path.Combine(opciones.Carpetas.BaseFinal, opciones.Carpetas.Licitaciones);
 
-    public string ObtenerCarpetaFinalOrdenesCompra() =>
-        Path.Combine(opciones.Carpetas.BaseFinal, opciones.Carpetas.OrdenesCompra);
+    public string ObtenerCarpetaFinalOC() =>
+        Path.Combine(opciones.Carpetas.BaseFinal, opciones.Carpetas.OC);
 }
+

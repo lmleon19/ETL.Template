@@ -17,6 +17,7 @@ public sealed class ValidadorCsv
     /// <param name="delimitador">Caracter delimitador del archivo.</param>
     /// <param name="calificadorTexto">Caracter usado para delimitar textos que pueden contener separadores o saltos de línea.</param>
     /// <param name="cantidadMinimaFilas">Cantidad mínima de filas de datos requeridas. No cuenta el encabezado.</param>
+    /// <param name="porcentajeMaximoRegistrosInvalidos">Porcentaje máximo de registros con cantidad de columnas distinta al encabezado.</param>
     /// <param name="cancellationToken">Token de cancelación de la operación.</param>
     /// <returns>Resultado de la validación estructural.</returns>
     public async Task<ResultadoOperacion> ValidarEstructuraBasicaAsync(
@@ -25,6 +26,7 @@ public sealed class ValidadorCsv
         char delimitador,
         char calificadorTexto = '"',
         int cantidadMinimaFilas = 0,
+        decimal porcentajeMaximoRegistrosInvalidos = 0,
         CancellationToken cancellationToken = default)
     {
         try
@@ -35,6 +37,11 @@ public sealed class ValidadorCsv
             if (cantidadMinimaFilas < 0)
             {
                 return ResultadoOperacion.Error("La cantidad mínima de filas no puede ser negativa.");
+            }
+
+            if (porcentajeMaximoRegistrosInvalidos is < 0 or > 100)
+            {
+                return ResultadoOperacion.Error("El porcentaje maximo de registros invalidos debe estar entre 0 y 100.");
             }
 
             if (!File.Exists(rutaArchivo))
@@ -59,6 +66,7 @@ public sealed class ValidadorCsv
             }
 
             int cantidadFilasDatos = 0;
+            int cantidadFilasInvalidas = 0;
             int numeroRegistro = 1;
             string? registroCsv;
 
@@ -77,7 +85,13 @@ public sealed class ValidadorCsv
 
                 if (valores.Count != encabezados.Count)
                 {
-                    return ResultadoOperacion.Error($"El registro {numeroRegistro} contiene {valores.Count} columnas, pero el encabezado contiene {encabezados.Count}.");
+                    if (porcentajeMaximoRegistrosInvalidos <= 0)
+                    {
+                        return ResultadoOperacion.Error($"El registro {numeroRegistro} contiene {valores.Count} columnas, pero el encabezado contiene {encabezados.Count}.");
+                    }
+
+                    cantidadFilasInvalidas++;
+                    continue;
                 }
             }
 
@@ -86,7 +100,16 @@ public sealed class ValidadorCsv
                 return ResultadoOperacion.Error($"El archivo CSV contiene {cantidadFilasDatos} filas de datos, pero se requieren al menos {cantidadMinimaFilas}.");
             }
 
-            return ResultadoOperacion.Correcto("La estructura básica del CSV es válida.");
+            decimal porcentajeFilasInvalidas = cantidadFilasDatos == 0
+                ? 0
+                : decimal.Round(cantidadFilasInvalidas * 100m / cantidadFilasDatos, 4);
+
+            if (porcentajeFilasInvalidas > porcentajeMaximoRegistrosInvalidos)
+            {
+                return ResultadoOperacion.Error($"El archivo CSV contiene {cantidadFilasInvalidas} filas invalidas de {cantidadFilasDatos} ({porcentajeFilasInvalidas}%). El maximo permitido es {porcentajeMaximoRegistrosInvalidos}%.");
+            }
+
+            return ResultadoOperacion.Correcto($"La estructura básica del CSV es válida. Filas invalidas detectadas: {cantidadFilasInvalidas} de {cantidadFilasDatos} ({porcentajeFilasInvalidas}%).");
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

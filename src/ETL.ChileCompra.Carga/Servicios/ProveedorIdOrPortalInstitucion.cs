@@ -29,13 +29,10 @@ public sealed class ProveedorIdOrPortalInstitucion
         const string sql = """
             SELECT
                 CRM.IDORPortal AS IdorCRM,
-                MST.PDT_Idor AS IdorMST,
                 CRM.Rut
             FROM CRM.dbo.Instituciones CRM
-            LEFT JOIN Maestro.dbo.tblOrganismo MST 
-                ON CRM.ID = MST.CRM_Id
             WHERE CRM.Rut IS NOT NULL
-              AND (CRM.IDORPortal <> '' OR MST.PDT_Idor IS NOT NULL)
+              AND CRM.IDORPortal <> ''
               AND CRM.Habilitada = 0;
             """;
 
@@ -54,9 +51,8 @@ public sealed class ProveedorIdOrPortalInstitucion
             while (await reader.ReadAsync(cancellationToken))
             {
                 string? rutTexto = reader["Rut"]?.ToString();
-                string? idorMst = reader["IdorMST"]?.ToString();
                 string? idorCrm = reader["IdorCRM"]?.ToString();
-                string? idOrPortal = !string.IsNullOrWhiteSpace(idorMst) ? idorMst : idorCrm;
+                string? idOrPortal = !string.IsNullOrWhiteSpace(idorCrm) ? idorCrm : null;
                 int rut = NormalizadorRutChile.LimpiarNumero(rutTexto);
 
                 if (rut > 0 && !string.IsNullOrWhiteSpace(idOrPortal))

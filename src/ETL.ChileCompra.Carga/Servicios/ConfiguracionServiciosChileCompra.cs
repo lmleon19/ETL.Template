@@ -24,7 +24,6 @@ public static class ConfiguracionServiciosChileCompra
         services.AddSingleton<PreparadorCarpetasTrabajo>();
         services.AddSingleton<LimpiadorTablasStage>();
         services.AddSingleton<GeneradorUrlsChileCompra>();
-        services.AddSingleton<GeneradorSqlTablasStage>();
         services.AddSingleton<MetadataStage>();
         services.AddSingleton<ConvertidorValoresChileCompra>();
         services.AddSingleton<NormalizadorRutChile>();
@@ -34,7 +33,6 @@ public static class ConfiguracionServiciosChileCompra
         services.AddSingleton<LectorArchivosStage>();
         services.AddSingleton<ValidadorArchivosStage>();
         services.AddSingleton<CargadorStageChileCompra>();
-        services.AddSingleton<CreadorTablasAnualesChileCompra>();
         services.AddSingleton<ProcesoChileCompraCarga>();
 
         return services;

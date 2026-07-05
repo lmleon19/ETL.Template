@@ -1,4 +1,4 @@
-using ETL.Common.Resultados;
+﻿using ETL.Common.Resultados;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -44,7 +44,7 @@ public sealed class LimpiadorTablasStage
 
             string comandoSql = $"""
                 TRUNCATE TABLE {opciones.Tablas.StageLicitaciones};
-                TRUNCATE TABLE {opciones.Tablas.StageOrdenesCompra};
+                TRUNCATE TABLE {opciones.Tablas.StageOC};
                 """;
 
             await using SqlCommand comando = new(comandoSql, conexion)
@@ -63,3 +63,4 @@ public sealed class LimpiadorTablasStage
         }
     }
 }
+

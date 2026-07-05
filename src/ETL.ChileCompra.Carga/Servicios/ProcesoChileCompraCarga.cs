@@ -1,4 +1,4 @@
-using ETL.ChileCompra.Carga.Model;
+﻿using ETL.ChileCompra.Carga.Model;
 using ETL.Common.Resultados;
 using ETL.Common.Servicios;
 using Microsoft.Extensions.Configuration;
@@ -24,7 +24,6 @@ public sealed class ProcesoChileCompraCarga
     private readonly CargadorStageChileCompra cargadorStage;
     private readonly RepositorioParidadMoneda repositorioParidadMoneda;
     private readonly ProveedorIdOrPortalInstitucion proveedorIdOrPortal;
-    private readonly CreadorTablasAnualesChileCompra creadorTablasAnuales;
     private readonly ProcedimientoAlmacenado procedimientoAlmacenado;
     private IReadOnlyList<PeriodoProceso> periodos = [];
 
@@ -44,7 +43,6 @@ public sealed class ProcesoChileCompraCarga
         CargadorStageChileCompra cargadorStage,
         RepositorioParidadMoneda repositorioParidadMoneda,
         ProveedorIdOrPortalInstitucion proveedorIdOrPortal,
-        CreadorTablasAnualesChileCompra creadorTablasAnuales,
         ProcedimientoAlmacenado procedimientoAlmacenado)
     {
         this.opciones = opciones.Value;
@@ -62,7 +60,6 @@ public sealed class ProcesoChileCompraCarga
         this.cargadorStage = cargadorStage;
         this.repositorioParidadMoneda = repositorioParidadMoneda;
         this.proveedorIdOrPortal = proveedorIdOrPortal;
-        this.creadorTablasAnuales = creadorTablasAnuales;
         this.procedimientoAlmacenado = procedimientoAlmacenado;
     }
 
@@ -80,16 +77,6 @@ public sealed class ProcesoChileCompraCarga
     {
         periodos = calculadorPeriodos.Calcular(DateOnly.FromDateTime(DateTime.Today));
         return ResultadoOperacion.Correcto("Periodos calculados correctamente.");
-    }
-
-    public async Task<ResultadoOperacion> CrearTablasAnualesAsync(CancellationToken cancellationToken = default)
-    {
-        if (!ExistePeriodoCalculado(out ResultadoOperacion? error))
-        {
-            return error!;
-        }
-
-        return await creadorTablasAnuales.CrearAsync(periodos, cancellationToken);
     }
 
     public async Task<ResultadoOperacion> PrepararConversionMonedaAsync(CancellationToken cancellationToken = default)
@@ -136,7 +123,7 @@ public sealed class ProcesoChileCompraCarga
         return ResultadoOperacion.Correcto("Archivos ZIP de licitaciones descargados correctamente.");
     }
 
-    public async Task<ResultadoOperacion> DescargarOrdenesCompraAsync(CancellationToken cancellationToken = default)
+    public async Task<ResultadoOperacion> DescargarOCAsync(CancellationToken cancellationToken = default)
     {
         if (!ExistePeriodoCalculado(out ResultadoOperacion? error))
         {
@@ -145,8 +132,8 @@ public sealed class ProcesoChileCompraCarga
 
         foreach (PeriodoProceso periodo in periodos)
         {
-            string url = generadorUrls.ObtenerUrlOrdenesCompra(periodo);
-            string rutaDestino = preparadorCarpetas.ObtenerRutaZipOrdenesCompra(periodo);
+            string url = generadorUrls.ObtenerUrlOC(periodo);
+            string rutaDestino = preparadorCarpetas.ObtenerRutaZipOC(periodo);
             ResultadoOperacion<string> resultado = await descargaHttp.DescargarArchivoAsync(url, rutaDestino, cancellationToken);
 
             if (!resultado.Exitoso)
@@ -155,7 +142,7 @@ public sealed class ProcesoChileCompraCarga
             }
         }
 
-        return ResultadoOperacion.Correcto("Archivos ZIP de ordenes de compra descargados correctamente.");
+        return ResultadoOperacion.Correcto("Archivos ZIP de OC descargados correctamente.");
     }
 
     public Task<ResultadoOperacion> DescomprimirArchivosAsync()
@@ -169,26 +156,26 @@ public sealed class ProcesoChileCompraCarga
             return Task.FromResult(resultadoLicitaciones);
         }
 
-        ResultadoOperacion resultadoOrdenesCompra = DescomprimirCarpeta(
-            preparadorCarpetas.ObtenerCarpetaZipOrdenesCompra(),
-            preparadorCarpetas.ObtenerCarpetaExtraidosOrdenesCompra());
+        ResultadoOperacion resultadoOC = DescomprimirCarpeta(
+            preparadorCarpetas.ObtenerCarpetaZipOC(),
+            preparadorCarpetas.ObtenerCarpetaExtraidosOC());
 
-        return Task.FromResult(resultadoOrdenesCompra);
+        return Task.FromResult(resultadoOC);
     }
 
     public async Task<ResultadoOperacion> ValidarArchivosCsvAsync(CancellationToken cancellationToken = default)
     {
         string[] archivosLicitaciones = ObtenerCsvLicitaciones().ToArray();
-        string[] archivosOrdenesCompra = ObtenerCsvOrdenesCompra().ToArray();
+        string[] archivosOC = ObtenerCsvOC().ToArray();
 
         if (archivosLicitaciones.Length == 0)
         {
             return ResultadoOperacion.Error("No se encontraron CSV de licitaciones para validar.");
         }
 
-        if (archivosOrdenesCompra.Length == 0)
+        if (archivosOC.Length == 0)
         {
-            return ResultadoOperacion.Error("No se encontraron CSV de ordenes de compra para validar.");
+            return ResultadoOperacion.Error("No se encontraron CSV de OC para validar.");
         }
 
         foreach (string rutaArchivo in archivosLicitaciones)
@@ -201,9 +188,9 @@ public sealed class ProcesoChileCompraCarga
             }
         }
 
-        foreach (string rutaArchivo in archivosOrdenesCompra)
+        foreach (string rutaArchivo in archivosOC)
         {
-            ResultadoOperacion resultado = await validadorArchivosStage.ValidarOrdenesCompraAsync(rutaArchivo, cancellationToken);
+            ResultadoOperacion resultado = await validadorArchivosStage.ValidarOCAsync(rutaArchivo, cancellationToken);
 
             if (!resultado.Exitoso)
             {
@@ -216,6 +203,18 @@ public sealed class ProcesoChileCompraCarga
 
     public async Task<ResultadoOperacion> CargarTablasIntermediasAsync(CancellationToken cancellationToken = default)
     {
+        ResultadoOperacion cargaLicitaciones = await CargarStageLicitacionesAsync(cancellationToken);
+
+        if (!cargaLicitaciones.Exitoso)
+        {
+            return cargaLicitaciones;
+        }
+
+        return await CargarStageOCAsync(cancellationToken);
+    }
+
+    public async Task<ResultadoOperacion> CargarStageLicitacionesAsync(CancellationToken cancellationToken = default)
+    {
         ResultadoOperacion resultadoLookup = await proveedorIdOrPortal.CargarAsync(cancellationToken);
 
         if (!resultadoLookup.Exitoso)
@@ -226,58 +225,124 @@ public sealed class ProcesoChileCompraCarga
         try
         {
             List<RegistroLicitacionStage> licitaciones = [];
-            List<RegistroOrdenCompraStage> ordenesCompra = [];
 
             foreach (string rutaArchivo in ObtenerCsvLicitaciones())
             {
-                IReadOnlyList<Dictionary<string, string>> registrosCsv = await lectorArchivosStage.LeerCsvAsync(rutaArchivo, cancellationToken);
-                licitaciones.AddRange(mapeadorCsvStage.MapearLicitaciones(registrosCsv, Path.GetFileName(rutaArchivo)));
-            }
+                ResultadoOperacion<IReadOnlyList<Dictionary<string, string>>> resultadoLectura = await lectorArchivosStage.LeerCsvAsync(rutaArchivo, cancellationToken);
 
-            foreach (string rutaArchivo in ObtenerCsvOrdenesCompra())
-            {
-                IReadOnlyList<Dictionary<string, string>> registrosCsv = await lectorArchivosStage.LeerCsvAsync(rutaArchivo, cancellationToken);
-                ordenesCompra.AddRange(mapeadorCsvStage.MapearOrdenesCompra(registrosCsv, Path.GetFileName(rutaArchivo)));
-            }
+                if (!resultadoLectura.Exitoso)
+                {
+                    return ResultadoOperacion.Error(resultadoLectura.Mensaje, resultadoLectura.Excepcion);
+                }
 
-            ResultadoOperacion cargaLicitaciones = await cargadorStage.CargarAsync(
-                opciones.Tablas.StageLicitaciones,
-                licitaciones,
-                cancellationToken);
-
-            if (!cargaLicitaciones.Exitoso)
-            {
-                return cargaLicitaciones;
+                licitaciones.AddRange(mapeadorCsvStage.MapearLicitaciones(resultadoLectura.Valor!, Path.GetFileName(rutaArchivo)));
             }
 
             return await cargadorStage.CargarAsync(
-                opciones.Tablas.StageOrdenesCompra,
-                ordenesCompra,
+                opciones.Tablas.StageLicitaciones,
+                licitaciones,
                 cancellationToken);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            logger.LogError(ex, "Error al leer, mapear o cargar tablas intermedias ChileCompra.");
-            return ResultadoOperacion.Error("No fue posible cargar las tablas intermedias.", ex);
+            logger.LogError(ex, "Error al leer, mapear o cargar Stage de licitaciones ChileCompra.");
+            return ResultadoOperacion.Error("No fue posible cargar el Stage de licitaciones.", ex);
+        }
+    }
+
+    public async Task<ResultadoOperacion> CargarStageOCAsync(CancellationToken cancellationToken = default)
+    {
+        ResultadoOperacion resultadoLookup = await proveedorIdOrPortal.CargarAsync(cancellationToken);
+
+        if (!resultadoLookup.Exitoso)
+        {
+            return resultadoLookup;
+        }
+
+        try
+        {
+            List<RegistroOrdenCompraStage> oc = [];
+
+            foreach (string rutaArchivo in ObtenerCsvOC())
+            {
+                ResultadoOperacion<IReadOnlyList<Dictionary<string, string>>> resultadoLectura = await lectorArchivosStage.LeerCsvAsync(rutaArchivo, cancellationToken);
+
+                if (!resultadoLectura.Exitoso)
+                {
+                    return ResultadoOperacion.Error(resultadoLectura.Mensaje, resultadoLectura.Excepcion);
+                }
+
+                oc.AddRange(mapeadorCsvStage.MapearOC(resultadoLectura.Valor!, Path.GetFileName(rutaArchivo)));
+            }
+
+            return await cargadorStage.CargarAsync(
+                opciones.Tablas.StageOC,
+                oc,
+                cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "Error al leer, mapear o cargar Stage de OC ChileCompra.");
+            return ResultadoOperacion.Error("No fue posible cargar el Stage de OC.", ex);
         }
     }
 
     public async Task<ResultadoOperacion> EjecutarTraspasoFinalAsync(CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(opciones.Procedimientos.TraspasoFinal))
+        ResultadoOperacion creacionTablas = await EjecutarCreacionTablasFinalesAnualesAsync(cancellationToken);
+
+        if (!creacionTablas.Exitoso)
         {
-            logger.LogWarning("Procedimiento de traspaso final no configurado.");
-            return ResultadoOperacion.Correcto("Traspaso final omitido por configuracion.");
+            return creacionTablas;
+        }
+
+        ResultadoOperacion traspasoLicitaciones = await EjecutarTraspasoFinalLicitacionesAsync(cancellationToken);
+
+        if (!traspasoLicitaciones.Exitoso)
+        {
+            return traspasoLicitaciones;
+        }
+
+        return await EjecutarTraspasoFinalOCAsync(cancellationToken);
+    }
+
+    public async Task<ResultadoOperacion> EjecutarCreacionTablasFinalesAnualesAsync(CancellationToken cancellationToken = default) =>
+        await EjecutarProcedimientoAsync(
+            opciones.Procedimientos.CrearTablasFinalesAnuales,
+            "creacion de tablas finales anuales",
+            cancellationToken);
+
+    public async Task<ResultadoOperacion> EjecutarTraspasoFinalLicitacionesAsync(CancellationToken cancellationToken = default) =>
+        await EjecutarProcedimientoAsync(
+            opciones.Procedimientos.TraspasoFinalLicitaciones,
+            "licitaciones",
+            cancellationToken);
+
+    public async Task<ResultadoOperacion> EjecutarTraspasoFinalOCAsync(CancellationToken cancellationToken = default) =>
+        await EjecutarProcedimientoAsync(
+            opciones.Procedimientos.TraspasoFinalOC,
+            "OC",
+            cancellationToken);
+
+    private async Task<ResultadoOperacion> EjecutarProcedimientoAsync(
+        string nombreProcedimiento,
+        string nombreProceso,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(nombreProcedimiento))
+        {
+            logger.LogWarning("Procedimiento de {Proceso} no configurado.", nombreProceso);
+            return ResultadoOperacion.Correcto($"Procedimiento de {nombreProceso} omitido por configuracion.");
         }
 
         string cadenaConexion = configuration.GetConnectionString("ChileCompra") ?? string.Empty;
-        return await procedimientoAlmacenado.EjecutarAsync(cadenaConexion, opciones.Procedimientos.TraspasoFinal, cancellationToken);
+        return await procedimientoAlmacenado.EjecutarAsync(cadenaConexion, nombreProcedimiento, cancellationToken);
     }
 
     public ResultadoOperacion ArchivarZipFinales()
     {
         MoverZipFinales(preparadorCarpetas.ObtenerCarpetaZipLicitaciones(), preparadorCarpetas.ObtenerCarpetaFinalLicitaciones());
-        MoverZipFinales(preparadorCarpetas.ObtenerCarpetaZipOrdenesCompra(), preparadorCarpetas.ObtenerCarpetaFinalOrdenesCompra());
+        MoverZipFinales(preparadorCarpetas.ObtenerCarpetaZipOC(), preparadorCarpetas.ObtenerCarpetaFinalOC());
 
         return ResultadoOperacion.Correcto("Archivos ZIP movidos a carpeta final correctamente.");
     }
@@ -300,8 +365,8 @@ public sealed class ProcesoChileCompraCarga
     private IEnumerable<string> ObtenerCsvLicitaciones() =>
         ObtenerCsv(preparadorCarpetas.ObtenerCarpetaExtraidosLicitaciones());
 
-    private IEnumerable<string> ObtenerCsvOrdenesCompra() =>
-        ObtenerCsv(preparadorCarpetas.ObtenerCarpetaExtraidosOrdenesCompra());
+    private IEnumerable<string> ObtenerCsvOC() =>
+        ObtenerCsv(preparadorCarpetas.ObtenerCarpetaExtraidosOC());
 
     private static IEnumerable<string> ObtenerCsv(string carpeta) =>
         Directory.Exists(carpeta)
@@ -331,3 +396,4 @@ public sealed class ProcesoChileCompraCarga
         return false;
     }
 }
+

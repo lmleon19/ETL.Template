@@ -97,4 +97,56 @@ public sealed class CsvTests
             File.Delete(rutaArchivo);
         }
     }
+
+    [Fact]
+    public async Task LeerCsvConErroresAsync_CuandoFilaTieneCantidadColumnasDistinta_OmiteFilaYRetornaErrorDetalle()
+    {
+        string rutaArchivo = Path.GetTempFileName();
+
+        try
+        {
+            await File.WriteAllTextAsync(rutaArchivo, "Id;Nombre\n1;Ana\n2;Luis;Extra\n3;Eva");
+
+            Csv servicio = new();
+
+            ResultadoLecturaCsv resultado = await servicio.LeerCsvConErroresAsync(rutaArchivo, Encoding.UTF8, ';');
+
+            Assert.Equal(2, resultado.Registros.Count);
+            Assert.Single(resultado.Errores);
+            Assert.Equal(3, resultado.Errores[0].NumeroRegistro);
+            Assert.Equal(3, resultado.TotalRegistrosDatos);
+        }
+        finally
+        {
+            File.Delete(rutaArchivo);
+        }
+    }
+
+    [Fact]
+    public async Task LeerCsvConErroresAsync_CuandoSuperaPorcentajeParametro_RetornaResultadoConExceso()
+    {
+        string rutaArchivo = Path.GetTempFileName();
+
+        try
+        {
+            await File.WriteAllTextAsync(rutaArchivo, "Id;Nombre\n1;Ana\n2;Luis;Extra\n3;Eva");
+
+            Csv servicio = new();
+
+            ResultadoLecturaCsv resultado = await servicio.LeerCsvConErroresAsync(
+                rutaArchivo,
+                Encoding.UTF8,
+                ';',
+                porcentajeMaximoRegistrosInvalidos: 2);
+
+            Assert.Equal(2, resultado.Registros.Count);
+            Assert.Equal(2, resultado.PorcentajeMaximoRegistrosInvalidos);
+            Assert.Equal(33.3333m, resultado.PorcentajeRegistrosInvalidos);
+            Assert.True(resultado.ExcedePorcentajeMaximo);
+        }
+        finally
+        {
+            File.Delete(rutaArchivo);
+        }
+    }
 }

@@ -130,6 +130,26 @@ Las validaciones deben entregar mensajes claros y útiles.
 
 ---
 
+## No inventar contratos de datos
+
+No se deben inventar estructuras, columnas, tipos de datos, nombres de base de datos, tablas, procedimientos, rutas, URLs ni reglas de negocio.
+
+Si falta informacion para definir un contrato de datos o una estructura tecnica, se debe preguntar al usuario antes de implementarla.
+
+Ejemplos de informacion que no debe inventarse:
+
+- estructura de una tabla
+- columnas de un archivo
+- tipos de datos
+- nombre de base de datos
+- nombre de schema
+- reglas de transformacion
+- reglas de negocio
+
+Cuando exista un archivo, script o fuente real disponible, debe revisarse antes de preguntar.
+
+---
+
 ## Mantenibilidad
 
 El código debe poder mantenerse durante años.
@@ -161,6 +181,36 @@ No deben inventar nuevas estructuras de carpetas.
 No deben incorporar dependencias innecesarias.
 
 Toda propuesta debe mantener la consistencia con el estándar definido por este proyecto.
+
+---
+
+# Reglas aprendidas en operacion
+
+## Configuracion explicita
+
+Las reglas operativas deben ser visibles y configurables.
+
+No deben quedar escondidas en el codigo reglas como meses a procesar, tolerancias aceptadas, rutas, nombres de tablas, nombres de procedimientos, delimitadores o URLs.
+
+El codigo puede tener defaults razonables, pero la operacion debe poder ajustarse desde configuracion.
+
+---
+
+## Validacion semantica
+
+Validar no es solo revisar formato.
+
+Cuando un dato se usara para calcular campos derivados, debe validarse semanticamente antes de transformarse.
+
+Si un dato no es valido, no debe convertirse en un dato aparentemente valido.
+
+---
+
+## Trazabilidad de rechazos
+
+Los datos rechazados, omitidos o dejados en `null` por validacion deben ser auditables cuando tengan impacto operativo.
+
+Los ETL deben persistir log historico y log del ultimo proceso mediante el mecanismo comun del template.
 
 ---
 

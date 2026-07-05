@@ -76,6 +76,32 @@ public sealed class ValidadorCsvDetalleTests
     }
 
     [Fact]
+    public async Task ValidarEstructuraBasicaAsync_CuandoFilaInvalidaEstaDentroDelPorcentajePermitido_RetornaCorrecto()
+    {
+        string rutaArchivo = Path.GetTempFileName();
+
+        try
+        {
+            await File.WriteAllTextAsync(rutaArchivo, "Id;Nombre\n1;Ana\n2;Luis;Extra\n3;Eva");
+
+            ValidadorCsv validador = new();
+
+            var resultado = await validador.ValidarEstructuraBasicaAsync(
+                rutaArchivo,
+                Encoding.UTF8,
+                ';',
+                porcentajeMaximoRegistrosInvalidos: 40);
+
+            Assert.True(resultado.Exitoso);
+            Assert.Contains("Filas invalidas detectadas: 1", resultado.Mensaje, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            File.Delete(rutaArchivo);
+        }
+    }
+
+    [Fact]
     public async Task ValidarEstructuraBasicaAsync_CuandoCampoTieneSaltoLineaEntreComillas_RetornaCorrecto()
     {
         string rutaArchivo = Path.GetTempFileName();

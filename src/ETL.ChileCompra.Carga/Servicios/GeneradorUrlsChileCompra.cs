@@ -1,4 +1,4 @@
-using ETL.ChileCompra.Carga.Model;
+﻿using ETL.ChileCompra.Carga.Model;
 using Microsoft.Extensions.Options;
 
 namespace ETL.ChileCompra.Carga.Servicios;
@@ -11,7 +11,7 @@ public sealed class GeneradorUrlsChileCompra
 
     public string ObtenerUrlLicitaciones(PeriodoProceso periodo) => GenerarUrl(opciones.Urls.Licitaciones, periodo);
 
-    public string ObtenerUrlOrdenesCompra(PeriodoProceso periodo) => GenerarUrl(opciones.Urls.OrdenesCompra, periodo);
+    public string ObtenerUrlOC(PeriodoProceso periodo) => GenerarUrl(opciones.Urls.OC, periodo);
 
     public string ObtenerUrlParidadMoneda() => opciones.Urls.ParidadMoneda;
 
@@ -24,3 +24,4 @@ public sealed class GeneradorUrlsChileCompra
             .Replace("{mes}", periodo.Mes.ToString(), StringComparison.OrdinalIgnoreCase);
     }
 }
+

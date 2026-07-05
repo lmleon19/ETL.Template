@@ -1,11 +1,18 @@
-using ETL.ChileCompra.Carga.Servicios;
+﻿using ETL.ChileCompra.Carga.Servicios;
 using ETL.Common.Resultados;
+using ETL.Common.Servicios;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
+OpcionesLoggerArchivo opcionesLoggerArchivo = builder.Configuration
+    .GetSection("ChileCompra:Logs")
+    .Get<OpcionesLoggerArchivo>() ?? new OpcionesLoggerArchivo();
+
+builder.Logging.AddLoggerArchivo(opcionesLoggerArchivo);
 builder.Services.AddServiciosChileCompra(builder.Configuration);
 
 using IHost host = builder.Build();
@@ -17,7 +24,7 @@ try
 {
     proceso.RegistrarInicioProceso();
 
-    if (true)
+    if (false)
     {
         // Limpia carpetas de trabajo y tablas intermedias antes de iniciar la carga.
         ResultadoOperacion resultado = await proceso.PrepararEjecucionAsync();
@@ -28,9 +35,9 @@ try
         }
     }
 
-    if (true)
+    if (false)
     {
-        // Calcula los ultimos cuatro meses cerrados y los anios involucrados.
+        // Calcula los ultimos meses cerrados configurados y los anios involucrados.
         ResultadoOperacion resultado = proceso.CalcularPeriodosProceso();
         if (!resultado.Exitoso)
         {
@@ -39,18 +46,7 @@ try
         }
     }
 
-    if (true)
-    {
-        // Crea las tablas anuales de licitaciones y ordenes de compra si no existen.
-        ResultadoOperacion resultado = await proceso.CrearTablasAnualesAsync();
-        if (!resultado.Exitoso)
-        {
-            logger.LogError("{Mensaje}", resultado.Mensaje);
-            return 1;
-        }
-    }
-
-    if (true)
+    if (false)
     {
         // Descarga y prepara las conversiones de moneda necesarias para los periodos.
         ResultadoOperacion resultado = await proceso.PrepararConversionMonedaAsync();
@@ -61,7 +57,7 @@ try
         }
     }
 
-    if (true)
+    if (false)
     {
         // Descarga los archivos ZIP de licitaciones.
         ResultadoOperacion resultado = await proceso.DescargarLicitacionesAsync();
@@ -72,10 +68,10 @@ try
         }
     }
 
-    if (true)
+    if (false)
     {
-        // Descarga los archivos ZIP de ordenes de compra.
-        ResultadoOperacion resultado = await proceso.DescargarOrdenesCompraAsync();
+        // Descarga los archivos ZIP de OC.
+        ResultadoOperacion resultado = await proceso.DescargarOCAsync();
         if (!resultado.Exitoso)
         {
             logger.LogError("{Mensaje}", resultado.Mensaje);
@@ -83,7 +79,7 @@ try
         }
     }
 
-    if (true)
+    if (false)
     {
         // Descomprime los ZIP descargados en carpetas separadas.
         ResultadoOperacion resultado = await proceso.DescomprimirArchivosAsync();
@@ -94,7 +90,7 @@ try
         }
     }
 
-    if (true)
+    if (false)
     {
         // Valida la estructura de los CSV extraidos.
         ResultadoOperacion resultado = await proceso.ValidarArchivosCsvAsync();
@@ -105,10 +101,21 @@ try
         }
     }
 
-    if (true)
+    if (false)
     {
-        // Lee los CSV, agrega metadatos y carga las tablas intermedias.
-        ResultadoOperacion resultado = await proceso.CargarTablasIntermediasAsync();
+        // Lee los CSV de licitaciones, agrega metadatos y carga el Stage.
+        ResultadoOperacion resultado = await proceso.CargarStageLicitacionesAsync();
+        if (!resultado.Exitoso)
+        {
+            logger.LogError("{Mensaje}", resultado.Mensaje);
+            return 1;
+        }
+    }
+
+    if (false)
+    {
+        // Lee los CSV de OC, agrega metadatos y carga el Stage.
+        ResultadoOperacion resultado = await proceso.CargarStageOCAsync();
         if (!resultado.Exitoso)
         {
             logger.LogError("{Mensaje}", resultado.Mensaje);
@@ -118,8 +125,30 @@ try
 
     if (true)
     {
-        // Elimina periodos existentes y traspasa datos desde tablas intermedias a tablas reales.
-        ResultadoOperacion resultado = await proceso.EjecutarTraspasoFinalAsync();
+        // Crea tablas finales anuales faltantes segun los anios presentes en Stage.
+        ResultadoOperacion resultado = await proceso.EjecutarCreacionTablasFinalesAnualesAsync();
+        if (!resultado.Exitoso)
+        {
+            logger.LogError("{Mensaje}", resultado.Mensaje);
+            return 1;
+        }
+    }
+
+    if (true)
+    {
+        // Traspasa licitaciones desde Stage hacia tablas finales.
+        ResultadoOperacion resultado = await proceso.EjecutarTraspasoFinalLicitacionesAsync();
+        if (!resultado.Exitoso)
+        {
+            logger.LogError("{Mensaje}", resultado.Mensaje);
+            return 1;
+        }
+    }
+
+    if (true)
+    {
+        // Traspasa OC desde Stage hacia tablas finales.
+        ResultadoOperacion resultado = await proceso.EjecutarTraspasoFinalOCAsync();
         if (!resultado.Exitoso)
         {
             logger.LogError("{Mensaje}", resultado.Mensaje);
@@ -146,3 +175,4 @@ catch (Exception ex)
     logger.LogError(ex, "Error no controlado durante la ejecucion del ETL ChileCompra.");
     return 1;
 }
+

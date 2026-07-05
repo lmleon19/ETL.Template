@@ -21,14 +21,15 @@ Estas utilidades cubren operaciones comunes de archivos, ZIP, CSV, encoding, des
 - `DescargaHttp`: descarga de archivos HTTP/HTTPS.
 - `Zip`: extracción segura de archivos ZIP.
 - `DetectorEncoding`: detección por BOM con fallback configurable.
-- `Csv`: lectura de CSV con encabezado, delimitador configurable y campos multilinea delimitados por calificador de texto.
+- `Csv`: lectura de CSV con encabezado, delimitador configurable, campos multilinea y tolerancia parametrizable para registros invalidos.
 - `HashArchivo`: cálculo de hash SHA-256 para trazabilidad de archivos.
 - `FechaProceso`: obtención y formateo estándar de fecha de proceso.
 - `RutaTrabajo`: construcción de rutas y carpetas de trabajo.
 - `NormalizadorTexto`: normalización genérica de espacios, acentos y nombres de columna.
 - `MensajesProceso`: generación de mensajes estándar de inicio, fin, pasos y errores.
+- `LoggerArchivo`: proveedor de `ILogger` para escribir log historico y log del ultimo proceso en archivos TXT.
 - `ValidadorArchivo`: validaciones genéricas de existencia, contenido, extensión y tamaño.
-- `ValidadorCsv`: validación de estructura básica y columnas obligatorias, incluyendo registros multilinea.
+- `ValidadorCsv`: validación de estructura basica, columnas obligatorias y porcentaje maximo parametrizable de registros invalidos.
 - `CargadorSqlBulkCopy`: carga masiva a tablas Stage.
 - `ProcedimientoAlmacenado`: ejecución de stored procedures.
 

@@ -1,4 +1,4 @@
-using ETL.ChileCompra.Carga.Model;
+﻿using ETL.ChileCompra.Carga.Model;
 
 namespace ETL.ChileCompra.Carga.Servicios;
 
@@ -35,9 +35,9 @@ public sealed class MapeadorCsvStage
             ValorRut rutInstitucion = normalizadorRut.Limpiar(registro.RutUnidad);
 
             registro.Archivo = archivo;
-            registro.InstitucionIdOrPortal = proveedorIdOrPortal.Obtener(rutInstitucion.Numero);
+            registro.InstitucionIdOrPortal = ObtenerIdOrPortal(rutInstitucion);
             registro.MonedaOrigenTotalAdjudicado = registro.MontoLineaAdjudica;
-            registro.ProveedorRutNumero = rutProveedor.Numero;
+            registro.ProveedorRutNumero = ObtenerNumeroRutValido(rutProveedor);
             registro.ClpTotalAdjudicado = repositorioParidadMoneda.ConvertirAClp(
                 ConvertirDecimal(registro.MontoLineaAdjudica),
                 registro.MonedaOferta ?? registro.MonedaAdquisicion ?? registro.CodigoMoneda,
@@ -51,7 +51,7 @@ public sealed class MapeadorCsvStage
         return registros;
     }
 
-    public IReadOnlyList<RegistroOrdenCompraStage> MapearOrdenesCompra(IEnumerable<Dictionary<string, string>> registrosCsv, string archivo)
+    public IReadOnlyList<RegistroOrdenCompraStage> MapearOC(IEnumerable<Dictionary<string, string>> registrosCsv, string archivo)
     {
         List<RegistroOrdenCompraStage> registros = [];
 
@@ -62,11 +62,11 @@ public sealed class MapeadorCsvStage
             ValorRut rutInstitucion = normalizadorRut.Limpiar(registro.RutUnidadCompra);
 
             registro.Archivo = archivo;
-            registro.ProveedorRutNumero = rutProveedor.Numero;
-            registro.ProveedorRutDv = rutProveedor.DigitoVerificador;
-            registro.InstitucionRutNumero = rutInstitucion.Numero;
-            registro.InstitucionRutDv = rutInstitucion.DigitoVerificador;
-            registro.IdOrPortal = proveedorIdOrPortal.Obtener(rutInstitucion.Numero);
+            registro.ProveedorRutNumero = ObtenerNumeroRutValido(rutProveedor);
+            registro.ProveedorRutDv = ObtenerDigitoVerificadorRutValido(rutProveedor);
+            registro.InstitucionRutNumero = ObtenerNumeroRutValido(rutInstitucion);
+            registro.InstitucionRutDv = ObtenerDigitoVerificadorRutValido(rutInstitucion);
+            registro.IdOrPortal = ObtenerIdOrPortal(rutInstitucion);
             registro.TotalClp = repositorioParidadMoneda.ConvertirAClp(
                 ConvertirDecimal(registro.TotalLineaNeto),
                 registro.MonedaItem ?? registro.TipoMonedaOC,
@@ -139,5 +139,15 @@ public sealed class MapeadorCsvStage
 
     private static decimal? ConvertirDecimal(double? valor) =>
         valor.HasValue ? Convert.ToDecimal(valor.Value) : null;
+
+    private string? ObtenerIdOrPortal(ValorRut rut) =>
+        rut.EsValido ? proveedorIdOrPortal.Obtener(rut.Numero) : null;
+
+    private static int? ObtenerNumeroRutValido(ValorRut rut) =>
+        rut.EsValido ? rut.Numero : null;
+
+    private static string? ObtenerDigitoVerificadorRutValido(ValorRut rut) =>
+        rut.EsValido ? rut.DigitoVerificador : null;
 }
+
 
