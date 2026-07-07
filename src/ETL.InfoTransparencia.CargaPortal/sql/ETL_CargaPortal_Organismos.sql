@@ -1,0 +1,151 @@
+CREATE OR ALTER PROCEDURE dbo.ETL_CargaPortal_Organismos
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRANSACTION;
+
+    MERGE INTO dbo.PORTAL_Organismos WITH (HOLDLOCK) AS DN
+    USING BDC_Datamart.dbo.PORTAL_Organismos AS D
+        ON D.Codigo_org = DN.Codigo_org
+    WHEN MATCHED AND EXISTS (
+        SELECT
+            D.IdOrg,
+            D.Organismo,
+            D.Codigo_padre,
+            D.Padre_org,
+            D.Region,
+            D.Municipalidad,
+            D.direccion,
+            D.telefono,
+            D.url_organismo,
+            D.url_orgtransparencia,
+            D.horario_publico,
+            D.nombre_encargado,
+            D.email,
+            D.num_cuenta,
+            D.rut,
+            D.tipo_cuenta,
+            D.banco,
+            D.url_sai,
+            D.fax,
+            D.Ingresa,
+            D.obligadorecibir_sai,
+            D.organismo_autonomo,
+            D.interopera,
+            D.tiene_ta,
+            D.Fecha_Incorporacion_TA
+        EXCEPT
+        SELECT
+            DN.IdOrg,
+            DN.Organismo,
+            DN.Codigo_padre,
+            DN.Padre_org,
+            DN.Region,
+            DN.Municipalidad,
+            DN.direccion,
+            DN.telefono,
+            DN.url_organismo,
+            DN.url_orgtransparencia,
+            DN.horario_publico,
+            DN.nombre_encargado,
+            DN.email,
+            DN.num_cuenta,
+            DN.rut,
+            DN.tipo_cuenta,
+            DN.banco,
+            DN.url_sai,
+            DN.fax,
+            DN.Ingresa,
+            DN.obligadorecibir_sai,
+            DN.organismo_autonomo,
+            DN.interopera,
+            DN.tiene_ta,
+            DN.Fecha_Incorporacion_TA)
+    THEN UPDATE SET
+        DN.IdOrg = D.IdOrg,
+        DN.Organismo = D.Organismo,
+        DN.Codigo_padre = D.Codigo_padre,
+        DN.Padre_org = D.Padre_org,
+        DN.Region = D.Region,
+        DN.Municipalidad = D.Municipalidad,
+        DN.direccion = D.direccion,
+        DN.telefono = D.telefono,
+        DN.url_organismo = D.url_organismo,
+        DN.url_orgtransparencia = D.url_orgtransparencia,
+        DN.horario_publico = D.horario_publico,
+        DN.nombre_encargado = D.nombre_encargado,
+        DN.email = D.email,
+        DN.num_cuenta = D.num_cuenta,
+        DN.rut = D.rut,
+        DN.tipo_cuenta = D.tipo_cuenta,
+        DN.banco = D.banco,
+        DN.url_sai = D.url_sai,
+        DN.fax = D.fax,
+        DN.Ingresa = D.Ingresa,
+        DN.obligadorecibir_sai = D.obligadorecibir_sai,
+        DN.organismo_autonomo = D.organismo_autonomo,
+        DN.interopera = D.interopera,
+        DN.tiene_ta = D.tiene_ta,
+        DN.Fecha_Incorporacion_TA = D.Fecha_Incorporacion_TA
+    WHEN NOT MATCHED BY TARGET THEN
+        INSERT (
+            Codigo_org,
+            IdOrg,
+            Organismo,
+            Codigo_padre,
+            Padre_org,
+            Region,
+            Municipalidad,
+            direccion,
+            telefono,
+            url_organismo,
+            url_orgtransparencia,
+            horario_publico,
+            nombre_encargado,
+            email,
+            num_cuenta,
+            rut,
+            tipo_cuenta,
+            banco,
+            url_sai,
+            fax,
+            Ingresa,
+            obligadorecibir_sai,
+            organismo_autonomo,
+            interopera,
+            tiene_ta,
+            Fecha_Incorporacion_TA)
+        VALUES (
+            D.Codigo_org,
+            D.IdOrg,
+            D.Organismo,
+            D.Codigo_padre,
+            D.Padre_org,
+            D.Region,
+            D.Municipalidad,
+            D.direccion,
+            D.telefono,
+            D.url_organismo,
+            D.url_orgtransparencia,
+            D.horario_publico,
+            D.nombre_encargado,
+            D.email,
+            D.num_cuenta,
+            D.rut,
+            D.tipo_cuenta,
+            D.banco,
+            D.url_sai,
+            D.fax,
+            D.Ingresa,
+            D.obligadorecibir_sai,
+            D.organismo_autonomo,
+            D.interopera,
+            D.tiene_ta,
+            D.Fecha_Incorporacion_TA)
+    WHEN NOT MATCHED BY SOURCE THEN
+        DELETE;
+
+    COMMIT TRANSACTION;
+END;

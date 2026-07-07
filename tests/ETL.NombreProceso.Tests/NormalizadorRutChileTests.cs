@@ -1,4 +1,4 @@
-using ETL.ChileCompra.Carga.Servicios;
+using ETL.Common.Servicios;
 using Xunit;
 
 namespace ETL.NombreProceso.Tests;
@@ -19,7 +19,34 @@ public sealed class NormalizadorRutChileTests
         Assert.Equal(numeroEsperado, resultado.Numero);
         Assert.Equal(digitoVerificadorEsperado, resultado.DigitoVerificador);
         Assert.Equal(rut, resultado.TextoOriginal);
+        Assert.True(resultado.EstructuraValida);
         Assert.True(resultado.EsValido);
+    }
+
+    [Fact]
+    public void ValidarEstructura_CuandoRutTieneDigitoVerificadorIncorrecto_RetornaNumeroYDigito()
+    {
+        NormalizadorRutChile normalizador = new();
+
+        var resultado = normalizador.ValidarEstructura("70.934.000-7");
+
+        Assert.Equal(70934000, resultado.Numero);
+        Assert.Equal("7", resultado.DigitoVerificador);
+        Assert.True(resultado.EstructuraValida);
+        Assert.False(resultado.EsValido);
+    }
+
+    [Fact]
+    public void ValidarRutCompleto_CuandoRutTieneDigitoVerificadorIncorrecto_RetornaInvalido()
+    {
+        NormalizadorRutChile normalizador = new();
+
+        var resultado = normalizador.ValidarRutCompleto("70.934.000-7");
+
+        Assert.Equal(70934000, resultado.Numero);
+        Assert.Equal("7", resultado.DigitoVerificador);
+        Assert.True(resultado.EstructuraValida);
+        Assert.False(resultado.EsValido);
     }
 
     [Theory]

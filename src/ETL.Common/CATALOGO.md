@@ -11,6 +11,7 @@
 | `FechaProceso` | Funcional | Obtener y formatear fecha de proceso con formatos institucionales simples. |
 | `RutaTrabajo` | Funcional | Construir rutas de archivos y carpetas de trabajo por fecha. |
 | `NormalizadorTexto` | Funcional | Normalizar espacios, acentos y nombres de columna para comparaciones genéricas. |
+| `NormalizadorRutChile` | Funcional | Separar estructura de RUT chileno y validar RUT completo con dígito verificador. |
 | `MensajesProceso` | Funcional | Construir mensajes estándar de inicio, fin, pasos correctos y errores. |
 | `LoggerArchivo` | Funcional | Escribir logs de `ILogger` en un archivo historico acumulativo y otro del ultimo proceso. |
 | `ValidadorArchivo` | Funcional | Validar existencia, contenido, extensión y tamaño máximo de archivos. |

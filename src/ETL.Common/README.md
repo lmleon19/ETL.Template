@@ -26,6 +26,7 @@ Estas utilidades cubren operaciones comunes de archivos, ZIP, CSV, encoding, des
 - `FechaProceso`: obtención y formateo estándar de fecha de proceso.
 - `RutaTrabajo`: construcción de rutas y carpetas de trabajo.
 - `NormalizadorTexto`: normalización genérica de espacios, acentos y nombres de columna.
+- `NormalizadorRutChile`: normalización y validación de RUT chileno en dos niveles: estructura y validación completa con dígito verificador.
 - `MensajesProceso`: generación de mensajes estándar de inicio, fin, pasos y errores.
 - `LoggerArchivo`: proveedor de `ILogger` para escribir log historico y log del ultimo proceso en archivos TXT.
 - `ValidadorArchivo`: validaciones genéricas de existencia, contenido, extensión y tamaño.

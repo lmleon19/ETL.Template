@@ -10,6 +10,33 @@ La arquitectura del proyecto ya existe y no debe ser modificada.
 
 # Principios
 
+## Modo plan antes de ejecutar
+
+Antes de crear o modificar un ETL, se debe trabajar primero en modo plan.
+
+En modo plan se permite:
+
+- leer archivos del repositorio;
+- revisar scripts, modelos, configuracion y documentacion existente;
+- identificar informacion faltante;
+- proponer cambios concretos;
+- explicar archivos que se modificarian;
+- indicar pruebas o comandos de validacion recomendados.
+
+En modo plan no se debe:
+
+- crear archivos;
+- modificar codigo;
+- modificar scripts SQL;
+- modificar configuracion;
+- modificar documentacion;
+- ejecutar acciones que cambien datos o estructura.
+
+Solo se debe pasar de plan a ejecucion cuando el usuario lo indique explicitamente con una instruccion como `ejecuta`, `implementa`, `aplica`, `haz los cambios` o equivalente.
+
+Si el usuario entrega una solicitud ambigua, primero se debe responder con el plan y pedir confirmacion antes de editar.
+
+
 - El código debe ser simple.
 - Debe privilegiarse la legibilidad antes que escribir menos líneas.
 - Todo desarrollador debe poder comprender el flujo del ETL en pocos minutos.
@@ -162,9 +189,51 @@ RegistrarFinProceso()
 
 return 0
 
+Cuando un paso procese una coleccion de periodos, debe registrar inicio y fin de cada periodo.
+El log debe indicar al menos el periodo y el paso ejecutado, para poder seguir el avance y detectar en que periodo fallo o quedo detenido el proceso.
+
+Ejemplo:
+
+```csharp
+foreach (PeriodoProceso periodo in periodos)
+{
+    logger.LogInformation("Inicio periodo {Anio}-{Mes:00} para descarga de OC.", periodo.Anio, periodo.Mes);
+
+    await DescargarOCPeriodoAsync(periodo);
+
+    logger.LogInformation("Fin periodo {Anio}-{Mes:00} para descarga de OC.", periodo.Anio, periodo.Mes);
+}
+```
+
 ---
 
 # Organización
+
+## Nombre del proyecto
+
+Todo proyecto ETL especifico debe usar un nombre claro y consistente con el formato:
+
+```text
+ETL.<Dominio>.<Accion><Objeto>
+```
+
+Ejemplos:
+
+- `ETL.ChileCompra.DescargaData`
+- `ETL.ChileCompra.CargaInfoTransparencia`
+- `ETL.InfoTransparencia.CargaPortal`
+
+El nombre elegido debe mantenerse alineado en:
+
+- carpeta del proyecto dentro de `src`;
+- archivo `.csproj`;
+- namespace base;
+- seccion propia de configuracion en `appsettings.json`;
+- nombres de logs historico y ultimo proceso;
+- `README.md` y `docs/Flujo.md` del ETL.
+
+El dominio debe representar la fuente, destino o area funcional principal del proceso. La accion y objeto deben ser autoexplicativos y estar en espanol cuando corresponda al dominio del repositorio.
+
 
 La lógica debe distribuirse mediante clases y servicios.
 

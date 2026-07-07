@@ -6,9 +6,13 @@ Antes de finalizar el desarrollo verificar el siguiente checklist.
 
 ## Arquitectura
 
+- Antes de modificar archivos, se presento un plan cuando correspondia.
+- Se recibio instruccion explicita de ejecutar antes de crear o modificar codigo, SQL, configuracion o documentacion.
+
 - No se modifico la estructura del template.
 - No se modifico ETL.Common durante el desarrollo normal de un ETL especifico.
 - El proyecto mantiene la arquitectura definida.
+- El nombre del proyecto sigue el formato `ETL.<Dominio>.<Accion><Objeto>` y coincide con carpeta, `.csproj`, namespace, configuracion, logs y documentacion.
 
 ---
 
@@ -57,6 +61,7 @@ Antes de finalizar el desarrollo verificar el siguiente checklist.
 
 - Se registra inicio.
 - Se registra fin.
+- Cuando se procesan periodos, se registra inicio y fin de cada periodo con el paso correspondiente.
 - Se registran errores.
 - Se registran advertencias importantes.
 - Las filas o datos omitidos por validacion quedan trazables en log cuando tienen impacto operativo.

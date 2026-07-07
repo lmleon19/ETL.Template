@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -6,8 +6,8 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\ETL.ChileCompra.Carga\ETL.ChileCompra.Carga.csproj" />
     <ProjectReference Include="..\..\src\ETL.Common\ETL.Common.csproj" />
+    <ProjectReference Include="..\..\src\ETL.ChileCompra.DescargaData\ETL.ChileCompra.DescargaData.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />

@@ -1,5 +1,7 @@
 <Solution>
   <Project Path="src/ETL.Common/ETL.Common.csproj" />
-  <Project Path="src/ETL.ChileCompra.Carga/ETL.ChileCompra.Carga.csproj" />
+  <Project Path="src/ETL.ChileCompra.DescargaData/ETL.ChileCompra.DescargaData.csproj" />
+  <Project Path="src/ETL.ChileCompra.CargaInfoTransparencia/ETL.ChileCompra.CargaInfoTransparencia.csproj" />
+  <Project Path="src/ETL.InfoTransparencia.CargaPortal/ETL.InfoTransparencia.CargaPortal.csproj" />
   <Project Path="tests/ETL.NombreProceso.Tests/ETL.NombreProceso.Tests.csproj" />
 </Solution>
